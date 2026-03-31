@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.playwright/
+output/
+.env
+.idea/
+*.egg-info/

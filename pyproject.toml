@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fishing-crawler"
+version = "0.1.0"
+description = "Logged-in Naver Cafe crawler for a single board's first page"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "playwright>=1.53.0,<2.0.0",
+  "psycopg[binary]>=3.2.9,<4.0.0",
+  "opensearch-py>=2.8.0,<3.0.0",
+]
+
+[project.scripts]
+fishing-crawler = "crawler.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["crawler*"]
