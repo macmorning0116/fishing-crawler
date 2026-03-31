@@ -1,0 +1,42 @@
+name: Deploy To EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -e
+            cd "${{ secrets.EC2_APP_DIR }}"
+            git fetch origin
+            git checkout main
+            git pull origin main
+
+            if [ -f requirements.txt ]; then
+              python3 -m pip install -r requirements.txt
+            fi
+
+            if [ -f pyproject.toml ]; then
+              python3 -m pip install -e .
+            fi
+
+            if [ -n "${{ secrets.EC2_DEPLOY_COMMAND }}" ]; then
+              bash -lc "${{ secrets.EC2_DEPLOY_COMMAND }}"
+            fi

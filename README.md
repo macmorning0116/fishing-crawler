@@ -246,3 +246,35 @@ Postgres에는 아래 두 테이블을 둡니다.
 - `crawl_checkpoints`: 게시판별 백필 재시작 지점 저장용
 
 OpenSearch 기본 인덱스 이름은 `fishing_articles_v1` 입니다.
+
+## 브랜치 전략과 EC2 자동 배포
+
+권장 흐름:
+
+- `develop`: 작업용 브랜치
+- `main`: 배포 브랜치
+
+이 저장소에는 [`.github/workflows/deploy-to-ec2.yml`](/Users/kim-yechan/Desktop/fishing-crawler/.github/workflows/deploy-to-ec2.yml) 워크플로가 포함되어 있습니다.
+`main` 브랜치에 push 되면 GitHub Actions가 EC2에 SSH로 접속해서 최신 코드를 pull 하도록 구성되어 있습니다.
+
+필요한 GitHub Secrets:
+
+- `EC2_HOST`: EC2 퍼블릭 호스트 또는 IP
+- `EC2_USER`: SSH 접속 유저명
+- `EC2_PORT`: SSH 포트. 기본값은 `22`
+- `EC2_SSH_PRIVATE_KEY`: 배포용 개인키
+- `EC2_APP_DIR`: EC2 안에서 이 저장소가 위치한 경로
+- `EC2_DEPLOY_COMMAND`: 선택. pull 이후 실행할 추가 명령
+
+예를 들면 `EC2_DEPLOY_COMMAND`에는 아래처럼 넣을 수 있습니다.
+
+```bash
+source .venv/bin/activate && python3 -m crawler.cli --test-storage
+```
+
+기본 배포 흐름:
+
+1. `develop`에서 작업 후 commit/push
+2. GitHub에서 `develop -> main` PR 생성 및 merge
+3. `main` push 트리거로 GitHub Actions 실행
+4. EC2에서 `git pull origin main` 반영
