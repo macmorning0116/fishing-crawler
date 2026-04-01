@@ -8,6 +8,7 @@ from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
+from urllib.parse import urlparse
 
 import psycopg
 from opensearchpy import OpenSearch
@@ -49,12 +50,19 @@ def postgres_connection() -> psycopg.Connection:
 
 
 def opensearch_client() -> OpenSearch:
+    raw_host = get_opensearch_host()
+    parsed = urlparse(raw_host if "://" in raw_host else f"http://{raw_host}")
+    use_ssl = parsed.scheme == "https"
+    host = parsed.hostname or raw_host
+    port = parsed.port or (443 if use_ssl else 80)
+
     return OpenSearch(
-        hosts=[get_opensearch_host()],
-        use_ssl=False,
+        hosts=[{"host": host, "port": port}],
+        use_ssl=use_ssl,
         verify_certs=False,
         ssl_assert_hostname=False,
         ssl_show_warn=False,
+        timeout=30,
     )
 
 
