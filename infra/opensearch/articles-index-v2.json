@@ -8,7 +8,7 @@
       "filter": {
         "fishing_synonym_filter": {
           "type": "synonym_graph",
-          "synonyms_path": "analysis/synonyms.txt",
+          "synonyms_path": "analyzers/F265830081",
           "updateable": true
         }
       },
