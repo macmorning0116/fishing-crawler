@@ -17,7 +17,7 @@ from crawler.env import load_dotenv
 from crawler.naver_cafe import ArticleResult, BoardConfig, parse_date_text
 
 
-DEFAULT_INDEX_NAME = "fishing_articles_v1"
+DEFAULT_INDEX_NAME = "fishing_articles_v2"
 POSTGRES_SCHEMA_PATH = Path("infra/postgres/init/001_init.sql")
 OPENSEARCH_INDEX_PATH = Path("infra/opensearch/articles-index.json")
 logger = logging.getLogger(__name__)
