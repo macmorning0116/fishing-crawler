@@ -545,6 +545,7 @@ async def crawl_backfill(
     board: BoardConfig,
     until_date: date,
     from_date: Optional[date] = None,
+    limit_results: Optional[int] = None,
     output_path: Path = DEFAULT_OUTPUT_PATH,
     save_output_json: bool = False,
     profile_dir: Path = DEFAULT_PROFILE_DIR,
@@ -555,13 +556,14 @@ async def crawl_backfill(
     max_pages: int = 1000,
 ) -> list[ArticleResult]:
     logger.info(
-        "backfill 시작 board=%s from_date=%s until_date=%s start_page=%s max_pages=%s page_size=%s",
+        "backfill 시작 board=%s from_date=%s until_date=%s start_page=%s max_pages=%s page_size=%s limit_results=%s",
         board.board_name,
         from_date,
         until_date,
         start_page,
         max_pages,
         page_size,
+        limit_results,
     )
     if save_output_json:
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -644,6 +646,17 @@ async def crawl_backfill(
                     results.append(article_result)
                     page_collected += 1
 
+                    if limit_results is not None and len(results) >= limit_results:
+                        logger.info(
+                            "backfill 수집 한도 도달로 종료 board=%s page=%s limit_results=%s total_collected=%s",
+                            board.board_name,
+                            page_number,
+                            limit_results,
+                            len(results),
+                        )
+                        should_stop = True
+                        break
+
                 logger.info(
                     "backfill 페이지 처리 완료 board=%s page=%s page_collected=%s total_collected=%s skipped_newer=%s should_stop=%s",
                     board.board_name,
@@ -687,6 +700,7 @@ async def crawl_backfill(
 async def crawl_incremental(
     board: BoardConfig,
     existing_article_ids: set[str],
+    limit_results: Optional[int] = None,
     output_path: Path = DEFAULT_OUTPUT_PATH,
     save_output_json: bool = False,
     profile_dir: Path = DEFAULT_PROFILE_DIR,
@@ -699,7 +713,7 @@ async def crawl_incremental(
     stop_after_existing_ratio: float = 0.8,
 ) -> list[ArticleResult]:
     logger.info(
-        "incremental 시작 board=%s existing_ids=%s start_page=%s max_pages=%s page_size=%s streak=%s ratio=%.2f",
+        "incremental 시작 board=%s existing_ids=%s start_page=%s max_pages=%s page_size=%s streak=%s ratio=%.2f limit_results=%s",
         board.board_name,
         len(existing_article_ids),
         start_page,
@@ -707,6 +721,7 @@ async def crawl_incremental(
         page_size,
         stop_after_existing_streak,
         stop_after_existing_ratio,
+        limit_results,
     )
     if save_output_json:
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -777,6 +792,17 @@ async def crawl_incremental(
                         continue
                     results.append(article_result)
                     page_new += 1
+
+                    if limit_results is not None and len(results) >= limit_results:
+                        logger.info(
+                            "incremental 수집 한도 도달로 종료 board=%s page=%s limit_results=%s total_collected=%s",
+                            board.board_name,
+                            page_number,
+                            limit_results,
+                            len(results),
+                        )
+                        should_stop = True
+                        break
 
                 if articles:
                     existing_ratio = existing_count_in_page / len(articles)

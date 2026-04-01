@@ -232,6 +232,7 @@ def main() -> None:
                     board=board,
                     until_date=until_date,
                     from_date=from_date,
+                    limit_results=args.limit_results,
                     output_path=args.output,
                     save_output_json=args.save_output_json,
                     profile_dir=args.profile_dir,
@@ -249,6 +250,7 @@ def main() -> None:
                 crawl_incremental(
                     board=board,
                     existing_article_ids=existing_article_ids,
+                    limit_results=args.limit_results,
                     output_path=args.output,
                     save_output_json=args.save_output_json,
                     profile_dir=args.profile_dir,
@@ -273,7 +275,7 @@ def main() -> None:
                 )
             )
 
-        if args.limit_results is not None:
+        if args.limit_results is not None and args.mode == "first_page":
             results = results[: args.limit_results]
 
         if args.store_postgres:
