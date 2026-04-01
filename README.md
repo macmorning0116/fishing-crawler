@@ -301,3 +301,38 @@ source .venv/bin/activate && python3 -m crawler.cli --test-storage
 2. GitHub에서 `develop -> main` PR 생성 및 merge
 3. `main` push 트리거로 GitHub Actions 실행
 4. EC2에서 `git pull origin main` 반영
+
+## 운영용 증분 배치
+
+세 게시판을 하루 2번 순차 실행하려면 [`scripts/run_incremental_all.sh`](/Users/kim-yechan/Desktop/fishing-crawler/scripts/run_incremental_all.sh) 를 사용할 수 있습니다.
+
+스크립트 기본 동작:
+
+- `bass_walking` 증분 실행
+- 30초 대기
+- `bass_boating` 증분 실행
+- 30초 대기
+- `freshwater_guest` 증분 실행
+
+기본 로그 경로:
+
+- `/var/log/fishing-crawler/crawler.log`
+
+필요 조건:
+
+- `.venv` 준비
+- 프로젝트 루트 `.env` 준비
+- `SMTP_*`, `NOTIFY_EMAIL_*` 값 설정 시 성공/실패 메일 발송
+
+권장 cron 예시:
+
+```cron
+0 1 * * * cd /home/ubuntu/fishing-crawler && /home/ubuntu/fishing-crawler/scripts/run_incremental_all.sh
+0 13 * * * cd /home/ubuntu/fishing-crawler && /home/ubuntu/fishing-crawler/scripts/run_incremental_all.sh
+```
+
+실행 권한 부여:
+
+```bash
+chmod +x /home/ubuntu/fishing-crawler/scripts/run_incremental_all.sh
+```
