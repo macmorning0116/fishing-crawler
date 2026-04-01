@@ -440,7 +440,7 @@ def _build_result_from_api(board: BoardConfig, summary: ArticleSummary, payload:
         fixed_species=board.fixed_species,
     )
 
-    date_text = summary.date_text or format_write_timestamp(article.get("writeDate"))
+    date_text = format_write_timestamp(article.get("writeDate")) or summary.date_text
 
     return ArticleResult(
         board_name=board.board_name,
