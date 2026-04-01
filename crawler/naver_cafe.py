@@ -12,6 +12,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Iterable, Optional
 from urllib.parse import urlencode, urlparse, urlunparse, parse_qsl
+from zoneinfo import ZoneInfo
 
 from playwright.async_api import BrowserContext, Error, Frame, Page, async_playwright
 
@@ -32,6 +33,7 @@ DEFAULT_PROFILE_DIR = Path(".playwright/naver-profile")
 NAVER_LOGIN_URL = "https://nid.naver.com/nidlogin.login"
 ARTICLE_API_BASE = "https://article.cafe.naver.com/gw/v4/cafes/{cafe_id}/articles/{article_id}"
 logger = logging.getLogger(__name__)
+SEOUL_TZ = ZoneInfo("Asia/Seoul")
 
 
 class HtmlTextExtractor(HTMLParser):
@@ -172,7 +174,7 @@ def format_write_timestamp(value: Any) -> str:
     if timestamp <= 0:
         return ""
 
-    return datetime.fromtimestamp(timestamp / 1000).date().isoformat()
+    return datetime.fromtimestamp(timestamp / 1000, tz=SEOUL_TZ).date().isoformat()
 
 
 def article_result_date(article: ArticleResult) -> Optional[date]:
