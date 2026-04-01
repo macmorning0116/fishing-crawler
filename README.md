@@ -247,6 +247,29 @@ Postgres에는 아래 두 테이블을 둡니다.
 
 OpenSearch 기본 인덱스 이름은 `fishing_articles_v1` 입니다.
 
+## OpenSearch 동의어 사전 초안
+
+영문/국문 혼용 검색을 위해 동의어 사전 초안을 [`infra/opensearch/synonyms.txt`](/Users/kim-yechan/Desktop/fishing-crawler/infra/opensearch/synonyms.txt)에 둡니다.
+
+예시:
+
+- `bass` 검색 시 `배스`
+- `bluegill` 검색 시 `블루길`
+- `walking` 검색 시 `워킹`
+- `reservoir` 검색 시 `저수지`
+
+운영 반영 시 권장 순서:
+
+1. `synonyms.txt`를 Amazon OpenSearch Service custom package로 업로드
+2. 동의어 search analyzer가 반영된 [`infra/opensearch/articles-index-v2.json`](/Users/kim-yechan/Desktop/fishing-crawler/infra/opensearch/articles-index-v2.json) 기준으로 `fishing_articles_v2` 생성
+3. `fishing_articles_v1` -> `fishing_articles_v2` reindex
+4. 백엔드 `OPENSEARCH_INDEX_NAME`를 `fishing_articles_v2`로 전환
+
+주의:
+
+- `synonyms_path` 값은 AWS에서 package 연결 후 서비스가 인식하는 실제 경로로 맞춰야 합니다
+- 기존 운영 인덱스 analyzer 변경보다 새 인덱스 생성 후 전환 방식이 안전합니다
+
 ## 브랜치 전략과 EC2 자동 배포
 
 권장 흐름:

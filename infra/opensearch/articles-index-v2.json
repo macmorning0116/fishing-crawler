@@ -1,0 +1,95 @@
+{
+  "settings": {
+    "index": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    },
+    "analysis": {
+      "filter": {
+        "fishing_synonym_filter": {
+          "type": "synonym_graph",
+          "synonyms_path": "analysis/synonyms.txt",
+          "updateable": true
+        }
+      },
+      "analyzer": {
+        "fishing_search_analyzer": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "fishing_synonym_filter"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "dynamic": false,
+    "properties": {
+      "source": { "type": "keyword" },
+      "cafe_id": { "type": "long" },
+      "article_id": { "type": "keyword" },
+      "board_key": { "type": "keyword" },
+      "board_name": {
+        "type": "text",
+        "search_analyzer": "fishing_search_analyzer",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "menu_id": { "type": "long" },
+      "title": {
+        "type": "text",
+        "search_analyzer": "fishing_search_analyzer",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 512 }
+        }
+      },
+      "body_text": {
+        "type": "text",
+        "search_analyzer": "fishing_search_analyzer"
+      },
+      "author_name": {
+        "type": "text",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "published_at": { "type": "date", "format": "strict_date_optional_time||yyyy-MM-dd||yyyy.MM.dd." },
+      "date_text": { "type": "keyword" },
+      "category_label": {
+        "type": "text",
+        "search_analyzer": "fishing_search_analyzer",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "access_status": { "type": "keyword" },
+      "access_reason": { "type": "text" },
+      "species": { "type": "keyword" },
+      "species_reason": { "type": "text" },
+      "external_open": { "type": "boolean" },
+      "external_open_reason": { "type": "text" },
+      "region": { "type": "keyword" },
+      "region_reason": { "type": "text" },
+      "place": {
+        "type": "text",
+        "search_analyzer": "fishing_search_analyzer",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "place_reason": { "type": "text" },
+      "url": { "type": "keyword" },
+      "page_url": { "type": "keyword" },
+      "page_title": {
+        "type": "text",
+        "search_analyzer": "fishing_search_analyzer",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 512 }
+        }
+      },
+      "updated_at": { "type": "date" }
+    }
+  }
+}

@@ -1,0 +1,239 @@
+bass, 배스
+black bass, 배스
+largemouth bass, 배스
+smallmouth bass, 배스
+lm bass, 배스
+sm bass, 배스
+bass fishing, 배스
+basser, 배서
+배서, 배스낚시인
+배스꾼, 배스낚시인
+
+bluegill, 블루길
+carp, 잉어
+catfish, 메기
+crucian carp, 붕어
+snakehead, 가물치
+mandarin fish, 쏘가리
+rockfish, 우럭
+sea bass, 우럭
+flatfish, 광어
+olive flounder, 광어
+yellow corvina, 조기
+croaker, 조기
+red sea bream, 참돔
+sea bream, 참돔
+black porgy, 감성돔
+rock bream, 돌돔
+horse mackerel, 전갱이
+mackerel, 고등어
+squid, 오징어
+octopus, 문어
+cutlassfish, 갈치
+pomfret, 병어
+yellowtail, 방어
+amberjack, 부시리
+salmon, 연어
+trout, 송어
+perch, 농어
+pike, 가물치
+eel, 장어
+peacock bass, 피콕배스
+largemouth, 라지마우스배스
+smallmouth, 스몰마우스배스
+sunfish, 블루길
+gibel carp, 떡붕어
+asian swamp eel, 드렁허리
+freshwater eel, 뱀장어
+ayu, 은어
+smelt, 빙어
+tilapia, 틸라피아
+mullet, 숭어
+grey mullet, 숭어
+sea mullet, 숭어
+striped beakperch, 농어
+japanese seabass, 농어
+black sea bream, 감성돔
+gilthead bream, 돔
+porgy, 돔
+grunt, 노래미
+greenling, 노래미
+rock trout, 쥐노래미
+korean rockfish, 우럭
+marbled rockfish, 우럭
+flounder, 넙치
+halibut, 대광어
+turbot, 도다리
+marbled sole, 도다리
+sole, 도다리
+sandfish, 도다리
+black scraper, 벵에돔
+parrot bass, 벵에돔
+triggerfish, 쥐치
+filefish, 쥐치
+finespotted flounder, 참가자미
+gizzard shad, 전어
+shad, 전어
+herring, 청어
+saury, 꽁치
+anchovy, 멸치
+sardine, 정어리
+tuna, 참치
+skipjack tuna, 가다랑어
+bonito, 가다랑어
+king mackerel, 삼치
+spanish mackerel, 삼치
+hairtail, 갈치
+conger eel, 붕장어
+conger, 붕장어
+moray, 곰치
+filefish, 말쥐치
+korean bullhead, 동자개
+bullhead, 동자개
+loach, 미꾸라지
+mudfish, 미꾸리
+goby, 망둥어
+yellowfin goby, 망둥어
+skate, 홍어
+ray, 가오리
+cuttlefish, 갑오징어
+webfoot octopus, 낙지
+common octopus, 돌문어
+shrimp, 새우
+mantis shrimp, 쏙
+king crab, 대게
+crab, 게
+
+walking, 워킹
+shore jigging, 워킹
+boating, 보팅
+boat fishing, 보팅
+shore fishing, 워킹
+land based, 워킹
+bank fishing, 워킹
+land lure, 워킹
+boat, 보팅
+boat lure, 보팅
+jigging, 지깅
+shore jigging, 쇼어지깅
+casting, 캐스팅
+lure, 루어
+lure fishing, 루어
+topwater, 탑워터
+spinnerbait, 스피너베이트
+crankbait, 크랭크베이트
+jerkbait, 저크베이트
+swimbait, 스윔베이트
+worm, 웜
+down shot, 다운샷
+downshot, 다운샷
+texas rig, 텍사스리그
+free rig, 프리리그
+rubber jig, 러버지그
+minnow, 미노우
+metal jig, 메탈지그
+frog, 프로그
+no sinker, 노싱커
+ns, 노싱커
+channel, 수로
+point, 포인트
+워킹낚시, 워킹
+도보낚시, 워킹
+보팅낚시, 보팅
+선상낚시, 보팅
+탑, 탑워터
+탑워터게임, 탑워터
+스베, 스윔베이트
+스피너, 스피너베이트
+크랭크, 크랭크베이트
+저크, 저크베이트
+메탈, 메탈지그
+미노, 미노우
+러버, 러버지그
+프로그게임, 프로그
+프리, 프리리그
+프리채비, 프리리그
+텍사스, 텍사스리그
+텍사스채비, 텍사스리그
+다운샷리그, 다운샷
+다운샷채비, 다운샷
+노싱커채비, 노싱커
+노싱커리그, 노싱커
+직공, 직벽공략
+직벽공략, 직벽
+쇼지, 쇼어지깅
+쇼어지깅게임, 쇼어지깅
+하드베이트, 하드베이트
+소프트베이트, 소프트베이트
+웜낚시, 웜
+채비, 리그
+리그, 채비
+
+reservoir, 저수지
+dam, 댐
+river, 강
+lake, 호수
+bay, 만
+stream, 계곡
+creek, 지류
+estuary, 하구
+canal, 수로
+breakwater, 방파제
+bridge, 교각
+dock, 선착장
+flat, 플랫
+reed, 갈대밭
+weed, 수초
+weed bed, 수초
+riprap, 석축
+rocky bank, 직벽
+vertical bank, 직벽
+mud flat, 뻘
+tidal flat, 갯벌
+브레이크라인, 브레이크라인
+브렉라인, 브레이크라인
+본류, 본류
+지류대, 지류
+인렛, 유입구
+아웃렛, 배수구
+직벽포인트, 직벽
+수초대, 수초
+갈대라인, 갈대밭
+수몰나무, 커버
+커버, 은신처
+스트럭처, 구조물
+구조물, 스트럭처
+
+water temp, 수온
+water temperature, 수온
+water color, 물색
+bait fish, 베이트피시
+forage, 베이트피시
+feeding time, 피딩타임
+feeding, 피딩
+hit, 입질
+bite, 입질
+strike, 입질
+hooking, 훅셋
+landing, 랜딩
+big one, 대물
+trophy, 대물
+monster, 대물
+활성도, 활성
+활성, 활성도
+저활성, 활성저조
+물색, 탁도
+맑은물, 클리어워터
+클리어워터, 맑은물
+탁한물, 머드워터
+머드워터, 탁한물
+피딩, 피딩타임
+피딩타임, 피딩
+숏바이트, 약한입질
+헛챔질, 미스바이트
+훅셋, 챔질
+챔질, 훅셋
+랜딩성공, 랜딩
+마릿수, 다수조과
+조과, 마릿수
+손맛, 히트
