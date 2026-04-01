@@ -461,12 +461,14 @@ def _build_result_from_api(board: BoardConfig, summary: ArticleSummary, payload:
 async def crawl_first_page(
     board: BoardConfig,
     output_path: Path = DEFAULT_OUTPUT_PATH,
+    save_output_json: bool = False,
     profile_dir: Path = DEFAULT_PROFILE_DIR,
     headless: bool = False,
     browser_channel: str = "chrome",
 ) -> list[ArticleResult]:
     logger.info("first_page crawl 시작 board=%s menu_id=%s", board.board_name, board.menu_id)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if save_output_json:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
     profile_dir.mkdir(parents=True, exist_ok=True)
 
     async with async_playwright() as playwright:
@@ -512,25 +514,28 @@ async def crawl_first_page(
                         len(results),
                     )
 
-            serialized = [
-                {
-                    "board_name": item.board_name,
-                    "article_id": item.article_id,
-                    "title": item.title,
-                    "url": item.url,
-                    "author": item.author,
-                    "date_text": item.date_text,
-                    "category_label": item.category_label,
-                    "page_title": item.page_title,
-                    "page_url": item.page_url,
-                    "body_text": item.body_text,
-                    "access": asdict(item.access),
-                    "classification": asdict(item.classification),
-                }
-                for item in results
-            ]
-            output_path.write_text(json.dumps(serialized, ensure_ascii=False, indent=2), encoding="utf-8")
-            logger.info("first_page crawl 완료 board=%s collected=%s output=%s", board.board_name, len(results), output_path)
+            if save_output_json:
+                serialized = [
+                    {
+                        "board_name": item.board_name,
+                        "article_id": item.article_id,
+                        "title": item.title,
+                        "url": item.url,
+                        "author": item.author,
+                        "date_text": item.date_text,
+                        "category_label": item.category_label,
+                        "page_title": item.page_title,
+                        "page_url": item.page_url,
+                        "body_text": item.body_text,
+                        "access": asdict(item.access),
+                        "classification": asdict(item.classification),
+                    }
+                    for item in results
+                ]
+                output_path.write_text(json.dumps(serialized, ensure_ascii=False, indent=2), encoding="utf-8")
+                logger.info("first_page crawl 완료 board=%s collected=%s output=%s", board.board_name, len(results), output_path)
+            else:
+                logger.info("first_page crawl 완료 board=%s collected=%s", board.board_name, len(results))
             return results
         finally:
             await context.close()
@@ -541,6 +546,7 @@ async def crawl_backfill(
     until_date: date,
     from_date: Optional[date] = None,
     output_path: Path = DEFAULT_OUTPUT_PATH,
+    save_output_json: bool = False,
     profile_dir: Path = DEFAULT_PROFILE_DIR,
     headless: bool = False,
     browser_channel: str = "chrome",
@@ -557,7 +563,8 @@ async def crawl_backfill(
         max_pages,
         page_size,
     )
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if save_output_json:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
     profile_dir.mkdir(parents=True, exist_ok=True)
 
     async with async_playwright() as playwright:
@@ -589,7 +596,7 @@ async def crawl_backfill(
             should_stop = False
             for page_number in range(start_page, start_page + max_pages):
                 list_url = build_board_page_url(board.menu_url, page=page_number, size=page_size)
-                logger.info("backfill 페이지 조회 board=%s page=%s url=%s", board.board_name, page_number, list_url)
+                logger.info("backfill 페이지 조회 board=%s page=%s", board.board_name, page_number)
                 await page.goto(list_url, wait_until="domcontentloaded")
                 frame_or_page = await _wait_for_article_links(page)
                 articles = await _extract_list_page_articles(frame_or_page)
@@ -650,25 +657,28 @@ async def crawl_backfill(
                 if should_stop:
                     break
 
-            serialized = [
-                {
-                    "board_name": item.board_name,
-                    "article_id": item.article_id,
-                    "title": item.title,
-                    "url": item.url,
-                    "author": item.author,
-                    "date_text": item.date_text,
-                    "category_label": item.category_label,
-                    "page_title": item.page_title,
-                    "page_url": item.page_url,
-                    "body_text": item.body_text,
-                    "access": asdict(item.access),
-                    "classification": asdict(item.classification),
-                }
-                for item in results
-            ]
-            output_path.write_text(json.dumps(serialized, ensure_ascii=False, indent=2), encoding="utf-8")
-            logger.info("backfill 완료 board=%s collected=%s output=%s", board.board_name, len(results), output_path)
+            if save_output_json:
+                serialized = [
+                    {
+                        "board_name": item.board_name,
+                        "article_id": item.article_id,
+                        "title": item.title,
+                        "url": item.url,
+                        "author": item.author,
+                        "date_text": item.date_text,
+                        "category_label": item.category_label,
+                        "page_title": item.page_title,
+                        "page_url": item.page_url,
+                        "body_text": item.body_text,
+                        "access": asdict(item.access),
+                        "classification": asdict(item.classification),
+                    }
+                    for item in results
+                ]
+                output_path.write_text(json.dumps(serialized, ensure_ascii=False, indent=2), encoding="utf-8")
+                logger.info("backfill 완료 board=%s collected=%s output=%s", board.board_name, len(results), output_path)
+            else:
+                logger.info("backfill 완료 board=%s collected=%s", board.board_name, len(results))
             return results
         finally:
             await context.close()
@@ -678,6 +688,7 @@ async def crawl_incremental(
     board: BoardConfig,
     existing_article_ids: set[str],
     output_path: Path = DEFAULT_OUTPUT_PATH,
+    save_output_json: bool = False,
     profile_dir: Path = DEFAULT_PROFILE_DIR,
     headless: bool = False,
     browser_channel: str = "chrome",
@@ -697,7 +708,8 @@ async def crawl_incremental(
         stop_after_existing_streak,
         stop_after_existing_ratio,
     )
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if save_output_json:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
     profile_dir.mkdir(parents=True, exist_ok=True)
 
     async with async_playwright() as playwright:
@@ -730,7 +742,7 @@ async def crawl_incremental(
             existing_streak = 0
             for page_number in range(start_page, start_page + max_pages):
                 list_url = build_board_page_url(board.menu_url, page=page_number, size=page_size)
-                logger.info("incremental 페이지 조회 board=%s page=%s url=%s", board.board_name, page_number, list_url)
+                logger.info("incremental 페이지 조회 board=%s page=%s", board.board_name, page_number)
                 await page.goto(list_url, wait_until="domcontentloaded")
                 frame_or_page = await _wait_for_article_links(page)
                 articles = await _extract_list_page_articles(frame_or_page)
@@ -791,25 +803,28 @@ async def crawl_incremental(
                 if should_stop:
                     break
 
-            serialized = [
-                {
-                    "board_name": item.board_name,
-                    "article_id": item.article_id,
-                    "title": item.title,
-                    "url": item.url,
-                    "author": item.author,
-                    "date_text": item.date_text,
-                    "category_label": item.category_label,
-                    "page_title": item.page_title,
-                    "page_url": item.page_url,
-                    "body_text": item.body_text,
-                    "access": asdict(item.access),
-                    "classification": asdict(item.classification),
-                }
-                for item in results
-            ]
-            output_path.write_text(json.dumps(serialized, ensure_ascii=False, indent=2), encoding="utf-8")
-            logger.info("incremental 완료 board=%s collected=%s output=%s", board.board_name, len(results), output_path)
+            if save_output_json:
+                serialized = [
+                    {
+                        "board_name": item.board_name,
+                        "article_id": item.article_id,
+                        "title": item.title,
+                        "url": item.url,
+                        "author": item.author,
+                        "date_text": item.date_text,
+                        "category_label": item.category_label,
+                        "page_title": item.page_title,
+                        "page_url": item.page_url,
+                        "body_text": item.body_text,
+                        "access": asdict(item.access),
+                        "classification": asdict(item.classification),
+                    }
+                    for item in results
+                ]
+                output_path.write_text(json.dumps(serialized, ensure_ascii=False, indent=2), encoding="utf-8")
+                logger.info("incremental 완료 board=%s collected=%s output=%s", board.board_name, len(results), output_path)
+            else:
+                logger.info("incremental 완료 board=%s collected=%s", board.board_name, len(results))
             return results
         finally:
             await context.close()
@@ -862,20 +877,21 @@ async def test_auto_login(
 
 
 def summarize_results(results: Iterable[ArticleResult]) -> str:
-    lines = []
-    for item in results:
-        open_value = (
-            "허용"
-            if item.classification.external_open is True
-            else "비허용"
-            if item.classification.external_open is False
-            else "미확인"
-        )
-        species_value = item.classification.species or "미확인"
-        region_value = item.classification.region or "미확인"
-        place_value = item.classification.place or "미확인"
-        lines.append(
-            f"- [{item.article_id}] {item.title} | 접근={item.access.status} | 어종={species_value} "
-            f"| 외부공개={open_value} | 지역={region_value} | 장소={place_value}"
-        )
-    return "\n".join(lines)
+    items = list(results)
+    total = len(items)
+    access_ok = sum(1 for item in items if item.access.status == "ok")
+    access_partial = sum(1 for item in items if item.access.status != "ok")
+    with_place = sum(1 for item in items if item.classification.place)
+    with_region = sum(1 for item in items if item.classification.region)
+    with_species = sum(1 for item in items if item.classification.species)
+
+    return "\n".join(
+        [
+            f"수집 결과 요약: 총 {total}건",
+            f"- 접근 정상: {access_ok}건",
+            f"- 접근 부분/제한: {access_partial}건",
+            f"- 어종 분류 완료: {with_species}건",
+            f"- 지역 분류 완료: {with_region}건",
+            f"- 장소 매칭 완료: {with_place}건",
+        ]
+    )

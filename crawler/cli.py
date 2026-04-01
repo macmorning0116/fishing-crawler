@@ -4,10 +4,12 @@ import argparse
 import asyncio
 import json
 import logging
+import socket
 from datetime import datetime
 from pathlib import Path
 
 from crawler.classifiers import ClassificationResult, DetailAccessResult
+from crawler.notifications import send_email_report
 from crawler.naver_cafe import (
     BOARD_REGISTRY,
     ArticleResult,
@@ -110,7 +112,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--board-name", default=None, help="Override board name for saved output")
     parser.add_argument("--menu-url", default=None, help="Override target Naver Cafe board URL")
     parser.add_argument("--input-json", type=Path, default=None, help="Load previously saved crawl JSON instead of crawling")
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH, help="Output JSON path")
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH, help="Optional output JSON path")
+    parser.add_argument(
+        "--save-output-json",
+        action="store_true",
+        help="Save crawled results to output JSON. By default, results are stored only in Postgres/OpenSearch.",
+    )
     parser.add_argument("--profile-dir", type=Path, default=DEFAULT_PROFILE_DIR, help="Persistent browser profile dir")
     parser.add_argument(
         "--browser-channel",
@@ -127,6 +134,11 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         default="INFO",
         help="Crawler log level.",
+    )
+    parser.add_argument(
+        "--send-email-report",
+        action="store_true",
+        help="Send a success/failure summary email using SMTP_* and NOTIFY_EMAIL_* env vars.",
     )
     return parser
 
@@ -203,77 +215,129 @@ def main() -> None:
         if version_number:
             print(f"OpenSearch 버전: {version_number}")
         return
+    postgres_upserted = 0
+    opensearch_upserted = 0
+    results: list[ArticleResult] = []
 
-    if args.input_json:
-        results = load_results_from_json(args.input_json)
-    elif args.mode == "backfill":
-        if not args.until_date:
-            parser.error("--mode backfill 에서는 --until-date YYYY-MM-DD 가 필요합니다.")
-        until_date = datetime.strptime(args.until_date, "%Y-%m-%d").date()
-        from_date = datetime.strptime(args.from_date, "%Y-%m-%d").date() if args.from_date else None
-        results = asyncio.run(
-            crawl_backfill(
+    try:
+        if args.input_json:
+            results = load_results_from_json(args.input_json)
+        elif args.mode == "backfill":
+            if not args.until_date:
+                parser.error("--mode backfill 에서는 --until-date YYYY-MM-DD 가 필요합니다.")
+            until_date = datetime.strptime(args.until_date, "%Y-%m-%d").date()
+            from_date = datetime.strptime(args.from_date, "%Y-%m-%d").date() if args.from_date else None
+            results = asyncio.run(
+                crawl_backfill(
+                    board=board,
+                    until_date=until_date,
+                    from_date=from_date,
+                    output_path=args.output,
+                    save_output_json=args.save_output_json,
+                    profile_dir=args.profile_dir,
+                    headless=args.headless,
+                    browser_channel=args.browser_channel,
+                    page_size=args.page_size,
+                    start_page=args.start_page,
+                    max_pages=args.max_pages,
+                )
+            )
+        elif args.mode == "incremental":
+            existing_article_ids = load_existing_article_ids_for_board(board=board)
+
+            results = asyncio.run(
+                crawl_incremental(
+                    board=board,
+                    existing_article_ids=existing_article_ids,
+                    output_path=args.output,
+                    save_output_json=args.save_output_json,
+                    profile_dir=args.profile_dir,
+                    headless=args.headless,
+                    browser_channel=args.browser_channel,
+                    page_size=args.page_size,
+                    start_page=args.start_page,
+                    max_pages=args.max_pages,
+                    stop_after_existing_streak=args.stop_after_existing_streak,
+                    stop_after_existing_ratio=args.stop_after_existing_ratio,
+                )
+            )
+        else:
+            results = asyncio.run(
+                crawl_first_page(
+                    board=board,
+                    output_path=args.output,
+                    save_output_json=args.save_output_json,
+                    profile_dir=args.profile_dir,
+                    headless=args.headless,
+                    browser_channel=args.browser_channel,
+                )
+            )
+
+        if args.limit_results is not None:
+            results = results[: args.limit_results]
+
+        if args.store_postgres:
+            init_postgres_schema()
+            postgres_upserted = upsert_articles_to_postgres(results=results, board=board, board_key=args.board_key)
+
+        if args.store_opensearch:
+            ensure_opensearch_index(index_name=args.opensearch_index)
+            opensearch_upserted = upsert_articles_to_opensearch(
+                results=results,
                 board=board,
-                until_date=until_date,
-                from_date=from_date,
-                output_path=args.output,
-                profile_dir=args.profile_dir,
-                headless=args.headless,
-                browser_channel=args.browser_channel,
-                page_size=args.page_size,
-                start_page=args.start_page,
-                max_pages=args.max_pages,
+                board_key=args.board_key,
+                index_name=args.opensearch_index,
+            )
+
+        print(
+            "\n".join(
+                [
+                    f"실행 결과: 성공",
+                    f"- 게시판: {board.board_name} ({args.board_key})",
+                    f"- 모드: {args.mode}",
+                    f"- 수집 건수: {len(results)}건",
+                    f"- Postgres upsert: {postgres_upserted}건",
+                    f"- OpenSearch upsert: {opensearch_upserted}건",
+                    summarize_results(results),
+                    f"- JSON 저장: {'예' if args.save_output_json else '아니오'}",
+                    *([f"- JSON 경로: {args.output}"] if args.save_output_json else []),
+                ]
             )
         )
-    elif args.mode == "incremental":
-        existing_article_ids = load_existing_article_ids_for_board(board=board)
 
-        results = asyncio.run(
-            crawl_incremental(
-                board=board,
-                existing_article_ids=existing_article_ids,
-                output_path=args.output,
-                profile_dir=args.profile_dir,
-                headless=args.headless,
-                browser_channel=args.browser_channel,
-                page_size=args.page_size,
-                start_page=args.start_page,
-                max_pages=args.max_pages,
-                stop_after_existing_streak=args.stop_after_existing_streak,
-                stop_after_existing_ratio=args.stop_after_existing_ratio,
+        if args.send_email_report:
+            send_email_report(
+                subject=f"[크롤러 성공] {board.board_name} {args.mode}",
+                body="\n".join(
+                    [
+                        f"호스트: {socket.gethostname()}",
+                        f"게시판: {board.board_name} ({args.board_key})",
+                        f"모드: {args.mode}",
+                        f"수집 건수: {len(results)}건",
+                        f"Postgres upsert: {postgres_upserted}건",
+                        f"OpenSearch upsert: {opensearch_upserted}건",
+                        summarize_results(results),
+                        f"JSON 저장: {'예' if args.save_output_json else '아니오'}",
+                        *( [f"JSON 경로: {args.output}"] if args.save_output_json else [] ),
+                    ]
+                ),
             )
-        )
-    else:
-        results = asyncio.run(
-            crawl_first_page(
-                board=board,
-                output_path=args.output,
-                profile_dir=args.profile_dir,
-                headless=args.headless,
-                browser_channel=args.browser_channel,
+    except Exception as exc:
+        logging.getLogger(__name__).exception("크롤링 실행 실패 board=%s mode=%s", board.board_name, args.mode)
+        if args.send_email_report:
+            send_email_report(
+                subject=f"[크롤러 실패] {board.board_name} {args.mode}",
+                body="\n".join(
+                    [
+                        f"호스트: {socket.gethostname()}",
+                        f"게시판: {board.board_name} ({args.board_key})",
+                        f"모드: {args.mode}",
+                        f"오류: {type(exc).__name__}",
+                        f"메시지: {exc}",
+                    ]
+                ),
             )
-        )
-
-    if args.limit_results is not None:
-        results = results[: args.limit_results]
-
-    if args.store_postgres:
-        init_postgres_schema()
-        inserted = upsert_articles_to_postgres(results=results, board=board, board_key=args.board_key)
-        print(f"Postgres upsert 완료: {inserted}건")
-
-    if args.store_opensearch:
-        ensure_opensearch_index(index_name=args.opensearch_index)
-        inserted = upsert_articles_to_opensearch(
-            results=results,
-            board=board,
-            board_key=args.board_key,
-            index_name=args.opensearch_index,
-        )
-        print(f"OpenSearch upsert 완료: {inserted}건")
-
-    print(summarize_results(results))
-    print(f"\n저장 위치: {args.output}")
+        raise
 
 
 if __name__ == "__main__":
